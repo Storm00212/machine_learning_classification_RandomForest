@@ -1,6 +1,4 @@
-"""
-Base class for all animal disease models
-"""
+
 from abc import ABC, abstractmethod
 import pandas as pd
 import numpy as np
@@ -13,7 +11,7 @@ from pathlib import Path
 from config.animal_configs import AnimalType, AnimalModelConfig
 
 class BaseAnimalModel(ABC):
-    """Base class for all animal disease models"""
+    
     
     def __init__(self, animal_type: AnimalType, config: AnimalModelConfig):
         self.animal_type = animal_type

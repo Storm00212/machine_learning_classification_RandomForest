@@ -1,6 +1,4 @@
-"""
-Main application for Animal Disease Prediction System
-"""
+
 import argparse
 import json
 import sys
