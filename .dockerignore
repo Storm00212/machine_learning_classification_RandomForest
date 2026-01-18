@@ -1,0 +1,11 @@
+.venv
+__pycache__
+*.pyc
+*.pyo
+.git
+.gitignore
+README.md
+*.md
+jupyter notebook/
+*.exe
+.DS_Store
