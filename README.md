@@ -139,44 +139,229 @@ Start the FastAPI server:
 python -m uvicorn api.endpoints:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-The API will be available at `http://localhost:8000`
+The API will be available at `http://localhost:8000`. Interactive API documentation is available at `http://localhost:8000/docs` (Swagger UI) and `http://localhost:8000/redoc` (ReDoc).
 
 #### API Endpoints
 
-- `GET /` - API information
-- `GET /health` - Health check
-- `GET /info` - System information
-- `GET /models` - List available models
-- `POST /predict/livestock` - Predict livestock disease
-- `POST /predict/poultry` - Predict poultry disease
-- `POST /predict/batch` - Batch prediction from CSV
-- `POST /train` - Train/re-train model
-- `GET /diseases` - Get disease information
-- `POST /generate-sample-data` - Generate sample data
+##### Health and System Endpoints
 
-#### Example API Usage
+- `GET /` - API information and available endpoints
+- `GET /health` - Health check with model loading status
+- `GET /info` - System information and capabilities
+- `GET /models` - List all available trained models
 
-**Predict Livestock Disease:**
-```bash
-curl -X POST "http://localhost:8000/predict/livestock" \
-     -H "Content-Type: application/json" \
-     -d '{
-       "animal_type": "dairy_cattle",
-       "age_months": 36,
-       "body_temperature": 40.5,
-       "feed_intake": "reduced",
-       "water_intake": "decreased",
-       "milk_production": 8.5,
-       "county": "Nakuru",
-       "season": "long_rains",
-       "vaccination_status": "partial"
-     }'
+##### Prediction Endpoints
+
+- `POST /predict/livestock` - Predict diseases for livestock animals
+- `POST /predict/poultry` - Predict diseases for poultry
+- `POST /predict/batch` - Batch prediction from uploaded CSV file
+
+##### Training and Management Endpoints
+
+- `POST /train` - Train or re-train a model
+- `POST /update-model` - Update/replace an existing model
+- `GET /diseases` - Get information about diseases
+- `POST /generate-sample-data` - Generate sample data for testing
+
+#### Input and Output Formats
+
+##### Livestock Prediction (`POST /predict/livestock`)
+
+**Input Format:**
+```json
+{
+  "animal_type": "dairy_cattle",
+  "age_months": 36,
+  "body_temperature": 40.5,
+  "feed_intake": "reduced",
+  "water_intake": "decreased",
+  "milk_production": 8.5,
+  "county": "Nakuru",
+  "season": "long_rains",
+  "vaccination_status": "partial",
+  "additional_info": {}
+}
 ```
 
-**Batch Prediction:**
-```bash
-curl -X POST "http://localhost:8000/predict/batch?animal_type=livestock" \
-     -F "file=@batch_data.csv"
+**Output Format:**
+```json
+{
+  "success": true,
+  "animal_type": "livestock",
+  "predictions": [
+    {
+      "disease": "Mastitis",
+      "probability": 0.85,
+      "confidence": "high"
+    },
+    {
+      "disease": "East Coast Fever",
+      "probability": 0.45,
+      "confidence": "medium"
+    }
+  ],
+  "explanation": {
+    "key_factors": "High temperature and reduced milk production",
+    "recommendations": "Consult veterinarian immediately"
+  },
+  "text_report": "Detailed analysis report...",
+  "timestamp": "2024-01-18T10:30:00",
+  "model_version": "2.0.0"
+}
+```
+
+##### Poultry Prediction (`POST /predict/poultry`)
+
+**Input Format:**
+```json
+{
+  "poultry_type": "layers",
+  "age_weeks": 32,
+  "flock_size": 500,
+  "mortality_rate": 2.5,
+  "egg_production": 85.0,
+  "feed_consumption": 100.0,
+  "county": "Kiambu",
+  "season": "cold",
+  "vaccination_status": "vaccinated",
+  "additional_info": {}
+}
+```
+
+**Output Format:** Similar to livestock prediction, with poultry-specific diseases and explanations.
+
+##### Batch Prediction (`POST /predict/batch`)
+
+**Input:** Multipart form data with CSV file and query parameter `animal_type` (livestock or poultry).
+
+**Output:** CSV file with predictions added, or JSON response with prediction results.
+
+##### Model Training (`POST /train`)
+
+**Input Format:**
+```json
+{
+  "animal_type": "livestock",
+  "model_name": "livestock_model_v2",
+  "test_size": 0.2
+}
+```
+
+**Output Format:**
+```json
+{
+  "success": true,
+  "message": "Model trained successfully for livestock",
+  "model_path": "models/livestock_model.pkl",
+  "metrics": {
+    "accuracy": 0.92,
+    "precision": 0.89,
+    "recall": 0.91,
+    "f1_score": 0.90
+  },
+  "training_date": "2024-01-18T10:30:00"
+}
+```
+
+#### Postman Testing Examples
+
+##### 1. Livestock Disease Prediction
+
+**Method:** POST
+**URL:** `http://localhost:8000/predict/livestock`
+**Headers:**
+```
+Content-Type: application/json
+```
+
+**Body (raw JSON):**
+```json
+{
+  "animal_type": "dairy_cattle",
+  "age_months": 36,
+  "body_temperature": 40.5,
+  "feed_intake": "reduced",
+  "water_intake": "decreased",
+  "milk_production": 8.5,
+  "county": "Nakuru",
+  "season": "long_rains",
+  "vaccination_status": "partial"
+}
+```
+
+**Expected Response:** 200 OK with prediction results as shown above.
+
+##### 2. Poultry Disease Prediction
+
+**Method:** POST
+**URL:** `http://localhost:8000/predict/poultry`
+**Headers:**
+```
+Content-Type: application/json
+```
+
+**Body (raw JSON):**
+```json
+{
+  "poultry_type": "layers",
+  "age_weeks": 32,
+  "flock_size": 500,
+  "mortality_rate": 2.5,
+  "egg_production": 85.0,
+  "feed_consumption": 100.0,
+  "county": "Kiambu",
+  "season": "cold",
+  "vaccination_status": "vaccinated"
+}
+```
+
+##### 3. Batch Prediction
+
+**Method:** POST
+**URL:** `http://localhost:8000/predict/batch?animal_type=livestock&return_file=true`
+**Body:** form-data
+**Key:** file
+**Value:** Select CSV file from your computer
+
+##### 4. Get Disease Information
+
+**Method:** GET
+**URL:** `http://localhost:8000/diseases?animal_type=livestock&disease_name=east_coast_fever`
+
+##### 5. Generate Sample Data
+
+**Method:** POST
+**URL:** `http://localhost:8000/generate-sample-data`
+**Headers:**
+```
+Content-Type: application/json
+```
+
+**Body (raw JSON):**
+```json
+{
+  "animal_type": "poultry",
+  "n_samples": 100,
+  "format": "csv"
+}
+```
+
+##### 6. Health Check
+
+**Method:** GET
+**URL:** `http://localhost:8000/health`
+
+**Expected Response:**
+```json
+{
+  "status": "healthy",
+  "timestamp": "2024-01-18T10:30:00",
+  "models_loaded": {
+    "livestock": true,
+    "poultry": true
+  },
+  "version": "2.0.0"
+}
 ```
 
 ##  Data Format
